@@ -1,0 +1,36 @@
+{
+	"name" : "ekyna/install-bundle",
+	"description" : "Runs bundles installers",
+	"type" : "symfony-bundle",
+	"authors" : [{
+			"name" : "Etienne Dauvergne",
+			"homepage" : "http://ekyna.com"
+		}
+	],
+	"keywords" : [
+		"symfony2",
+		"installer",
+		"bundle"
+	],
+	"homepage" : "https://github.com/ekyna/InstallBundle",
+	"license" : [
+		"MIT"
+	],
+	"require" : {
+		"php" : ">=5.4.0",
+		"ekyna/admin-bundle" : "0.1.*@dev",
+		"ekyna/file-manager-bundle" : "0.1.*@dev",
+		"ekyna/sitemap-bundle" : "0.1.*@dev"
+	},
+	"autoload" : {
+		"psr-0" : {
+			"Ekyna\\Bundle\\CmsBundle" : ""
+		}
+	},
+	"target-dir" : "Ekyna/Bundle/InstallBundle",
+	"extra" : {
+		"branch-alias" : {
+			"dev-master" : "0.1.x-dev"
+		}
+	}
+}
