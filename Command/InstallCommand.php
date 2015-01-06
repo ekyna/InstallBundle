@@ -33,7 +33,7 @@ You can also optionally specify the path to installers with the <info>--installe
 
   <info>./app/console ekyna:install --installer=/path/to/installer1 --installer=/path/to/installer2</info>
 EOT
-            );
+            )
         ;
     }
 
