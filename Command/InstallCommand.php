@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 
 /**
  * Class InstallCommand
@@ -67,7 +68,10 @@ EOT
         }
 
         foreach ($installers as $installer) {
-            $installer->install($this->getContainer(), $this, $input, $output);
+            if ($installer instanceOf ContainerAwareInterface) {
+                $installer->setContainer($this->getContainer());
+            }
+            $installer->install($this, $input, $output);
         }
     }
 }
