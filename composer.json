@@ -18,9 +18,7 @@
 	],
 	"require" : {
 		"php" : ">=5.4.0",
-		"ekyna/admin-bundle" : "0.1.*@dev",
-		"ekyna/file-manager-bundle" : "0.1.*@dev",
-		"ekyna/sitemap-bundle" : "0.1.*@dev"
+        "symfony/framework-bundle" : "2.5.*"
 	},
 	"autoload" : {
 		"psr-0" : {
