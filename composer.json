@@ -2,7 +2,8 @@
 	"name" : "ekyna/install-bundle",
 	"description" : "Runs bundles installers",
 	"type" : "symfony-bundle",
-	"authors" : [{
+	"authors" : [
+        {
 			"name" : "Etienne Dauvergne",
 			"homepage" : "http://ekyna.com"
 		}
@@ -17,8 +18,8 @@
 		"MIT"
 	],
 	"require" : {
-		"php" : ">=5.4.0",
-        "symfony/framework-bundle" : "2.5.*"
+		"php" : ">=5.3.3",
+        "symfony/framework-bundle" : "~2.3"
 	},
 	"autoload" : {
 		"psr-0" : {
