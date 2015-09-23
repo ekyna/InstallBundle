@@ -45,10 +45,10 @@ EOT
     {
         $dirOrFile = $input->getOption('installer');
         if ($dirOrFile) {
-            $paths = is_array($dirOrFile) ? $dirOrFile : array($dirOrFile);
+            $paths = is_array($dirOrFile) ? $dirOrFile : [$dirOrFile];
         } else {
-            $paths = array();
-            foreach ($this->getApplication()->getKernel()->getBundles() as $bundle) {
+            $paths = [];
+            foreach ($this->getContainer()->get('kernel')->getBundles() as $bundle) {
                 $paths[] = $bundle->getPath() . '/Install';
             }
         }

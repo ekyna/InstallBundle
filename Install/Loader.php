@@ -21,7 +21,7 @@ class Loader
      *
      * @var array
      */
-    private $orderedInstallers = array();
+    private $orderedInstallers = [];
 
     /**
      * Determines if we must order installers by number
@@ -57,8 +57,8 @@ class Loader
             throw new \InvalidArgumentException(sprintf('"%s" does not exist', $dir));
         }
 
-        $installers = array();
-        $includedFiles = array();
+        $installers = [];
+        $includedFiles = [];
 
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($dir),
@@ -139,7 +139,7 @@ class Loader
      */
     public function getInstallers()
     {
-        $this->orderedInstallers = array();
+        $this->orderedInstallers = [];
 
         if ($this->orderInstallersByNumber) {
             $this->orderInstallersByNumber();
@@ -187,7 +187,7 @@ class Loader
      */
     private function orderInstallersByDependencies()
     {
-        $sequenceForClasses = array();
+        $sequenceForClasses = [];
 
         // If installers were already ordered by number then we need
         // to remove classes which are not instances of OrderedInstallerInterface
@@ -260,7 +260,7 @@ class Loader
             $lastCount = $count;
         }
 
-        $orderedInstallers = array();
+        $orderedInstallers = [];
 
         // If there are installers unsequenced left and they couldn't be sequenced,
         // it means we have a circular reference
@@ -302,7 +302,7 @@ class Loader
 
     private function getUnsequencedClasses($sequences, $classes = null)
     {
-        $unsequencedClasses = array();
+        $unsequencedClasses = [];
 
         if (is_null($classes)) {
             $classes = array_keys($sequences);
