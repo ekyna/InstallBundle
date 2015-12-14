@@ -18,19 +18,12 @@
 	],
 	"require" : {
 		"php" : ">=5.4.0",
-		"ekyna/admin-bundle" : "0.1.*@dev",
-		"ekyna/file-manager-bundle" : "0.1.*@dev",
-		"ekyna/sitemap-bundle" : "0.1.*@dev"
+        "symfony/framework-bundle" : "~2.3"
 	},
 	"autoload" : {
 		"psr-0" : {
 			"Ekyna\\Bundle\\InstallBundle" : ""
 		}
 	},
-	"target-dir" : "Ekyna/Bundle/InstallBundle",
-	"extra" : {
-		"branch-alias" : {
-			"dev-master" : "0.1.x-dev"
-		}
-	}
+	"target-dir" : "Ekyna/Bundle/InstallBundle"
 }
