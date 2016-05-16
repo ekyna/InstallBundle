@@ -14,6 +14,26 @@ use Symfony\Component\Console\Output\OutputInterface;
 interface InstallerInterface
 {
     /**
+     * Performs interaction.
+     *
+     * @param Command            $command
+     * @param InputInterface     $input
+     * @param OutputInterface    $output
+     * @return void
+     */
+    public function initialize(Command $command, InputInterface $input, OutputInterface $output);
+
+    /**
+     * Performs interaction.
+     *
+     * @param Command            $command
+     * @param InputInterface     $input
+     * @param OutputInterface    $output
+     * @return void
+     */
+    public function interact(Command $command, InputInterface $input, OutputInterface $output);
+
+    /**
      * Performs installation.
      *
      * @param Command            $command

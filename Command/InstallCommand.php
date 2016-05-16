@@ -2,6 +2,7 @@
 
 namespace Ekyna\Bundle\InstallBundle\Command;
 
+use Ekyna\Bundle\InstallBundle\Install\InstallerInterface;
 use Ekyna\Bundle\InstallBundle\Install\Loader;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,6 +17,12 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
  */
 class InstallCommand extends ContainerAwareCommand
 {
+    /**
+     * @var InstallerInterface[]
+     */
+    private $installers;
+
+
     /**
      * {@inheritdoc}
      */
@@ -41,7 +48,7 @@ EOT
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output)
     {
         $dirOrFile = $input->getOption('installer');
         if ($dirOrFile) {
@@ -60,17 +67,37 @@ EOT
             }
         }
 
-        $installers = $loader->getInstallers();
-        if (!$installers) {
+        $this->installers = $loader->getInstallers();
+        if (empty($this->installers)) {
             throw new \InvalidArgumentException(
                 sprintf('Could not find any installers to load in: %s', "\n\n- ".implode("\n- ", $paths))
             );
         }
 
-        foreach ($installers as $installer) {
+        foreach ($this->installers as $installer) {
             if ($installer instanceOf ContainerAwareInterface) {
                 $installer->setContainer($this->getContainer());
             }
+            $installer->initialize($this, $input, $output);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function interact(InputInterface $input, OutputInterface $output)
+    {
+        foreach ($this->installers as $installer) {
+            $installer->interact($this, $input, $output);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        foreach ($this->installers as $installer) {
             $installer->install($this, $input, $output);
         }
     }
