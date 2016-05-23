@@ -1,29 +1,29 @@
 {
-	"name" : "ekyna/install-bundle",
-	"description" : "Runs bundles installers",
-	"type" : "symfony-bundle",
-	"authors" : [
+    "name" : "ekyna/install-bundle",
+    "description" : "Runs bundles installers",
+    "type" : "symfony-bundle",
+    "authors" : [
         {
-			"name" : "Etienne Dauvergne",
-			"homepage" : "http://ekyna.com"
-		}
-	],
-	"keywords" : [
-		"symfony2",
-		"installer",
-		"bundle"
-	],
-	"homepage" : "https://github.com/ekyna/InstallBundle",
-	"license" : [
-		"MIT"
-	],
-	"require" : {
-		"php" : ">=5.4.0",
-        "symfony/framework-bundle" : "~2.7"
-	},
-	"autoload" : {
-		"psr-4" : {
-			"Ekyna\\Bundle\\InstallBundle\\" : ""
-		}
-	}
+            "name" : "Etienne Dauvergne",
+            "homepage" : "http://ekyna.com"
+        }
+    ],
+    "keywords" : [
+        "symfony2",
+        "installer",
+        "bundle"
+    ],
+    "homepage" : "https://github.com/ekyna/InstallBundle",
+    "license" : [
+        "MIT"
+    ],
+    "require" : {
+        "php" : ">=5.5.9",
+        "symfony/framework-bundle" : "^3.0"
+    },
+    "autoload" : {
+        "psr-4" : {
+            "Ekyna\\Bundle\\InstallBundle\\" : ""
+        }
+    }
 }
