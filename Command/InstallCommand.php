@@ -35,11 +35,11 @@ class InstallCommand extends ContainerAwareCommand
             ->setHelp(<<<EOT
 The <info>ekyna:install</info> command loads and runs installers from your bundles:
 
-  <info>./app/console ekyna:install</info>
+  <info>php bin/console ekyna:install</info>
 
 You can also optionally specify the path to installers with the <info>--installer</info> option:
 
-  <info>./app/console ekyna:install --installer=/path/to/installer1 --installer=/path/to/installer2</info>
+  <info>php bin/console ekyna:install --installer=/path/to/installer1 --installer=/path/to/installer2</info>
 EOT
             )
         ;
