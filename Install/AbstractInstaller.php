@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\InstallBundle\Install;
 
 use Symfony\Component\Console\Command\Command;
@@ -14,23 +16,23 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractInstaller implements InstallerInterface
 {
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
-    public function initialize(Command $command, InputInterface $input, OutputInterface $output)
+    public function initialize(Command $command, InputInterface $input, OutputInterface $output): void
     {
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
-    public function interact(Command $command, InputInterface $input, OutputInterface $output)
+    public function interact(Command $command, InputInterface $input, OutputInterface $output): void
     {
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
-    public function install(Command $command, InputInterface $input, OutputInterface $output)
+    public function install(Command $command, InputInterface $input, OutputInterface $output): void
     {
     }
 }

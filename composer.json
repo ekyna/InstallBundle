@@ -5,7 +5,7 @@
     "authors": [
         {
             "name": "Etienne Dauvergne",
-            "homepage": "http://ekyna.com"
+            "homepage": "https://ekyna.com"
         }
     ],
     "keywords": [
@@ -16,8 +16,8 @@
     "homepage": "https://github.com/ekyna/InstallBundle",
     "license": "MIT",
     "require": {
-        "php": ">=7.0",
-        "symfony/framework-bundle": "^3.0"
+        "php": ">=7.4",
+        "symfony/framework-bundle": "^5.0"
     },
     "autoload": {
         "psr-4": {

@@ -1,56 +1,57 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\InstallBundle\Install;
+
+use InvalidArgumentException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use RuntimeException;
+
+use function array_keys;
+use function array_merge;
+use function asort;
+use function count;
+use function get_class;
+use function get_declared_classes;
+use function in_array;
+use function is_dir;
+use function is_subclass_of;
+use function realpath;
+use function sprintf;
 
 /**
  * Class Loader
  * @package Ekyna\Bundle\InstallBundle\Install
- * @author Étienne Dauvergne <contact@ekyna.com>
+ * @author  Étienne Dauvergne <contact@ekyna.com>
+ *
+ * @deprecated
+ * @TODO Remove
  */
 class Loader
 {
-    /**
-     * @var string[]
-     */
-    private $names;
+    private array $names;
+    private array $installers = [];
 
-    /**
-     * @var array
-     */
-    private $installers = [];
+    /** Array of ordered installer object instances. */
+    private array $orderedInstallers = [];
 
-    /**
-     * Array of ordered installer object instances.
-     *
-     * @var array
-     */
-    private $orderedInstallers = [];
+    /** Determines if we must order installers by number */
+    private bool $orderInstallersByNumber = false;
 
-    /**
-     * Determines if we must order installers by number
-     *
-     * @var boolean
-     */
-    private $orderInstallersByNumber = false;
+    /** Determines if we must order installers by its dependencies */
+    private bool $orderInstallersByDependencies = false;
 
-    /**
-     * Determines if we must order installers by its dependencies
-     *
-     * @var boolean
-     */
-    private $orderInstallersByDependencies = false;
+    /** The file extension of installer files. */
+    private string $fileExtension = '.php';
 
-    /**
-     * The file extension of installer files.
-     *
-     * @var string
-     */
-    private $fileExtension = '.php';
 
     /**
      * Constructor.
      *
-     * @param \string[] $names
+     * @param string[] $names
      */
     public function __construct(array $names = [])
     {
@@ -61,18 +62,20 @@ class Loader
      * Finds installer classes in a given directory and load them.
      *
      * @param string $dir Directory to find installer classes in.
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
-    public function loadFromDirectory($dir)
+    public function loadFromDirectory(string $dir)
     {
         if (!is_dir($dir)) {
-            throw new \InvalidArgumentException(sprintf('"%s" does not exist', $dir));
+            throw new InvalidArgumentException(sprintf('"%s" does not exist', $dir));
         }
 
         $includedFiles = [];
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir),
-            \RecursiveIteratorIterator::LEAVES_ONLY
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir),
+            RecursiveIteratorIterator::LEAVES_ONLY
         );
 
         foreach ($iterator as $file) {
@@ -84,17 +87,18 @@ class Loader
             require_once $sourceFile;
             $includedFiles[] = $sourceFile;
         }
-        $declared = get_declared_classes();
 
+        $declared = get_declared_classes();
         foreach ($declared as $className) {
-            $refClass = new \ReflectionClass($className);
+            /** @noinspection PhpUnhandledExceptionInspection */
+            $refClass = new ReflectionClass($className);
             $sourceFile = $refClass->getFileName();
 
-            if (in_array($sourceFile, $includedFiles) && !$this->isTransient($className)) {
+            if (in_array($sourceFile, $includedFiles, true) && !$this->isTransient($className)) {
                 /** @var InstallerInterface $installer */
-                $installer = new $className;
+                $installer = new $className();
 
-                if (!empty($this->names) && !in_array($installer->getName(), $this->names)) {
+                if (!empty($this->names) && !in_array($installer->getName(), $this->names, true)) {
                     continue;
                 }
 
@@ -107,15 +111,20 @@ class Loader
      * Check if the given installer is transient and should not be considered an installer class.
      *
      * @param string $className
-     * @return boolean
+     *
+     * @return bool
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
-    public function isTransient($className)
+    public function isTransient(string $className): bool
     {
-        $rc = new \ReflectionClass($className);
-        if ($rc->isAbstract()) return true;
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $rc = new ReflectionClass($className);
+        if ($rc->isAbstract()) {
+            return true;
+        }
 
-        $interfaces = class_implements($className);
-        return in_array('Ekyna\Bundle\InstallBundle\Install\InstallerInterface', $interfaces) ? false : true;
+        return !is_subclass_of($className, InstallerInterface::class);
     }
 
     /**
@@ -123,22 +132,24 @@ class Loader
      *
      * @param InstallerInterface $installer
      */
-    public function addInstaller(InstallerInterface $installer)
+    public function addInstaller(InstallerInterface $installer): void
     {
         $installerClass = get_class($installer);
 
         if (!isset($this->installers[$installerClass])) {
-            if ($installer instanceof OrderedInstallerInterface && $installer instanceof DependentInstallerInterface) {
-                throw new \InvalidArgumentException(sprintf('Class "%s" can\'t implement "%s" and "%s" at the same time.',
-                    $installerClass,
-                    'OrderedInstallerInterface',
-                    'DependentInstallerInterface'));
-            } elseif ($installer instanceof OrderedInstallerInterface) {
+            if ($installer instanceof OrderedInstallerInterface) {
+                if ($installer instanceof DependentInstallerInterface) {
+                    throw new InvalidArgumentException(sprintf('Class "%s" can\'t implement "%s" and "%s" at the same time.',
+                        $installerClass,
+                        'OrderedInstallerInterface',
+                        'DependentInstallerInterface'));
+                }
+
                 $this->orderInstallersByNumber = true;
             } elseif ($installer instanceof DependentInstallerInterface) {
                 $this->orderInstallersByDependencies = true;
                 foreach ($installer->getDependencies() as $class) {
-                    $this->addInstaller(new $class);
+                    $this->addInstaller(new $class());
                 }
             }
 
@@ -149,9 +160,9 @@ class Loader
     /**
      * Returns the array of data installers to execute.
      *
-     * @return array|InstallerInterface[] $installers
+     * @return InstallerInterface[] $installers
      */
-    public function getInstallers()
+    public function getInstallers(): array
     {
         $this->orderedInstallers = [];
 
@@ -173,23 +184,26 @@ class Loader
     /**
      * Orders installers by number
      *
-     * @todo maybe there is a better way to handle reordering
      * @return void
+     * @todo maybe there is a better way to handle reordering
      */
     private function orderInstallersByNumber()
     {
         $this->orderedInstallers = $this->installers;
+
         usort($this->orderedInstallers, function ($a, $b) {
             if ($a instanceof OrderedInstallerInterface && $b instanceof OrderedInstallerInterface) {
                 if ($a->getOrder() === $b->getOrder()) {
                     return 0;
                 }
+
                 return $a->getOrder() < $b->getOrder() ? -1 : 1;
             } elseif ($a instanceof OrderedInstallerInterface) {
                 return $a->getOrder() === 0 ? 0 : 1;
             } elseif ($b instanceof OrderedInstallerInterface) {
                 return $b->getOrder() === 0 ? 0 : -1;
             }
+
             return 0;
         });
     }
@@ -199,7 +213,7 @@ class Loader
      *
      * @return void
      */
-    private function orderInstallersByDependencies()
+    private function orderInstallersByDependencies(): void
     {
         $sequenceForClasses = [];
 
@@ -213,7 +227,7 @@ class Loader
             $count = count($this->orderedInstallers);
 
             for ($i = 0; $i < $count; ++$i) {
-                if (!($this->orderedInstallers[$i] instanceof OrderedInstallerInterface)) {
+                if (!$this->orderedInstallers[$i] instanceof OrderedInstallerInterface) {
                     unset($this->orderedInstallers[$i]);
                 }
             }
@@ -225,22 +239,24 @@ class Loader
 
             if ($installer instanceof OrderedInstallerInterface) {
                 continue;
-            } elseif ($installer instanceof DependentInstallerInterface) {
+            }
+
+            if ($installer instanceof DependentInstallerInterface) {
                 $dependenciesClasses = $installer->getDependencies();
 
                 $this->validateDependencies($dependenciesClasses);
 
                 if (!is_array($dependenciesClasses) || empty($dependenciesClasses)) {
-                    throw new \InvalidArgumentException(sprintf(
-                        'Method "%s" in class "%s" must return an array of classes which are '.
-                            'dependencies for the installer, and it must be NOT empty.',
+                    throw new InvalidArgumentException(sprintf(
+                        'Method "%s" in class "%s" must return an array of classes which are ' .
+                        'dependencies for the installer, and it must be NOT empty.',
                         'getDependencies',
                         $installerClass
                     ));
                 }
 
-                if (in_array($installerClass, $dependenciesClasses)) {
-                    throw new \InvalidArgumentException(sprintf(
+                if (in_array($installerClass, $dependenciesClasses, true)) {
+                    throw new InvalidArgumentException(sprintf(
                         'Class "%s" can\'t have itself as a dependency',
                         $installerClass
                     ));
@@ -248,25 +264,29 @@ class Loader
 
                 // We mark this class as unsequenced
                 $sequenceForClasses[$installerClass] = -1;
-            } else {
-                // This class has no dependencies, so we assign 0
-                $sequenceForClasses[$installerClass] = 0;
+
+                continue;
             }
+
+            // This class has no dependencies, so we assign 0
+            $sequenceForClasses[$installerClass] = 0;
         }
 
         // Now we order installers by sequence
         $sequence = 1;
         $lastCount = -1;
 
-        while (($count = count($unsequencedClasses = $this->getUnsequencedClasses($sequenceForClasses))) > 0
-                && $count !== $lastCount) {
+        while (
+            0 < ($count = count($unsequencedClasses = $this->getUnsequencedClasses($sequenceForClasses)))
+            && $count !== $lastCount
+        ) {
             foreach ($unsequencedClasses as $key => $class) {
                 /** @var DependentInstallerInterface $installer */
                 $installer = $this->installers[$class];
                 $dependencies = $installer->getDependencies();
                 $unsequencedDependencies = $this->getUnsequencedClasses($sequenceForClasses, $dependencies);
 
-                if (count($unsequencedDependencies) === 0) {
+                if (0 === count($unsequencedDependencies)) {
                     $sequenceForClasses[$class] = $sequence++;
                 }
             }
@@ -284,7 +304,7 @@ class Loader
             $msg .= 'Then, class B has class A has its dependency. Finally, class A has class C as its dependency. ';
             $msg .= 'This case would produce a circular reference exception.';
 
-            throw new \RuntimeException(sprintf($msg, implode(',', $unsequencedClasses)));
+            throw new RuntimeException(sprintf($msg, implode(',', $unsequencedClasses)));
         } else {
             // We order the classes by sequence
             asort($sequenceForClasses);
@@ -298,13 +318,20 @@ class Loader
         $this->orderedInstallers = array_merge($this->orderedInstallers, $orderedInstallers);
     }
 
-    private function validateDependencies($dependenciesClasses)
+    /**
+     * Validates the installer dependencies.
+     *
+     * @param string[] $dependenciesClasses
+     *
+     * @return bool
+     */
+    private function validateDependencies(array $dependenciesClasses): bool
     {
         $loadedInstallerClasses = array_keys($this->installers);
 
         foreach ($dependenciesClasses as $class) {
-            if (!in_array($class, $loadedInstallerClasses)) {
-                throw new \RuntimeException(sprintf(
+            if (!in_array($class, $loadedInstallerClasses, true)) {
+                throw new RuntimeException(sprintf(
                     'Installer "%s" was declared as a dependency, but it should be added in installer loader first.',
                     $class
                 ));
@@ -314,7 +341,15 @@ class Loader
         return true;
     }
 
-    private function getUnsequencedClasses($sequences, $classes = null)
+    /**
+     * Returns unsequenced classes.
+     *
+     * @param array      $sequences
+     * @param array|null $classes
+     *
+     * @return array
+     */
+    private function getUnsequencedClasses(array $sequences, array $classes = null): array
     {
         $unsequencedClasses = [];
 
