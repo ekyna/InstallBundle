@@ -5,8 +5,8 @@ namespace Ekyna\Bundle\InstallBundle\Command;
 use Ekyna\Bundle\InstallBundle\Install\InstallerInterface;
 use Ekyna\Bundle\InstallBundle\Install\Loader;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 
@@ -31,15 +31,15 @@ class InstallCommand extends ContainerAwareCommand
         $this
             ->setName('ekyna:install')
             ->setDescription('Runs the bundle\'s installers.')
-            ->addOption('installer', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The directory or file to load installer from.')
+            ->addArgument('names', InputArgument::IS_ARRAY, 'The names of the installers to execute.')
             ->setHelp(<<<EOT
 The <info>ekyna:install</info> command loads and runs installers from your bundles:
 
   <info>php bin/console ekyna:install</info>
 
-You can also optionally specify the path to installers with the <info>--installer</info> option:
+You can also optionally specify the names of the installers :
 
-  <info>php bin/console ekyna:install --installer=/path/to/installer1 --installer=/path/to/installer2</info>
+  <info>php bin/console ekyna:install admin cms commerce</info>
 EOT
             )
         ;
@@ -50,18 +50,11 @@ EOT
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $dirOrFile = $input->getOption('installer');
-        if ($dirOrFile) {
-            $paths = is_array($dirOrFile) ? $dirOrFile : [$dirOrFile];
-        } else {
-            $paths = [];
-            foreach ($this->getContainer()->get('kernel')->getBundles() as $bundle) {
-                $paths[] = $bundle->getPath() . '/Install';
-            }
-        }
+        $names = $input->getArgument('names');
 
-        $loader = new Loader();
-        foreach ($paths as $path) {
+        $loader = new Loader($names);
+        foreach ($this->getContainer()->get('kernel')->getBundles() as $bundle) {
+            $path = $bundle->getPath() . '/Install';
             if (is_dir($path)) {
                 $loader->loadFromDirectory($path);
             }
@@ -69,9 +62,11 @@ EOT
 
         $this->installers = $loader->getInstallers();
         if (empty($this->installers)) {
-            throw new \InvalidArgumentException(
-                sprintf('Could not find any installers to load in: %s', "\n\n- ".implode("\n- ", $paths))
-            );
+            $message = "Could not find any installers";
+            if (!empty($names)) {
+                $message .= " for names: '" . implode(', ', $names) . "'";
+            }
+            throw new \InvalidArgumentException($message);
         }
 
         foreach ($this->installers as $installer) {

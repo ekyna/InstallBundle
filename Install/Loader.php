@@ -6,11 +6,14 @@ namespace Ekyna\Bundle\InstallBundle\Install;
  * Class Loader
  * @package Ekyna\Bundle\InstallBundle\Install
  * @author Étienne Dauvergne <contact@ekyna.com>
- * @author Jonathan H. Wage <jonwage@gmail.com>
- * @see Doctrine\Common\DataFixtures\Loader
  */
 class Loader
 {
+    /**
+     * @var string[]
+     */
+    private $names;
+
     /**
      * @var array
      */
@@ -44,12 +47,20 @@ class Loader
      */
     private $fileExtension = '.php';
 
+    /**
+     * Constructor.
+     *
+     * @param \string[] $names
+     */
+    public function __construct(array $names = [])
+    {
+        $this->names = $names;
+    }
 
     /**
      * Finds installer classes in a given directory and load them.
      *
      * @param string $dir Directory to find installer classes in.
-     * @return array $installers Array of loaded installer object instances.
      */
     public function loadFromDirectory($dir)
     {
@@ -57,7 +68,6 @@ class Loader
             throw new \InvalidArgumentException(sprintf('"%s" does not exist', $dir));
         }
 
-        $installers = [];
         $includedFiles = [];
 
         $iterator = new \RecursiveIteratorIterator(
@@ -70,6 +80,7 @@ class Loader
                 continue;
             }
             $sourceFile = realpath($file->getPathName());
+            /** @noinspection PhpIncludeInspection */
             require_once $sourceFile;
             $includedFiles[] = $sourceFile;
         }
@@ -80,13 +91,16 @@ class Loader
             $sourceFile = $refClass->getFileName();
 
             if (in_array($sourceFile, $includedFiles) && !$this->isTransient($className)) {
+                /** @var InstallerInterface $installer */
                 $installer = new $className;
-                $installers[] = $installer;
+
+                if (!empty($this->names) && !in_array($installer->getName(), $this->names)) {
+                    continue;
+                }
+
                 $this->addInstaller($installer);
             }
         }
-
-        return $installers;
     }
 
     /**

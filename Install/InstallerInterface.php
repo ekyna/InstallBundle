@@ -42,4 +42,11 @@ interface InstallerInterface
      * @return void
      */
     public function install(Command $command, InputInterface $input, OutputInterface $output);
+
+    /**
+     * Returns the installer name.
+     *
+     * @return string
+     */
+    public function getName();
 }
