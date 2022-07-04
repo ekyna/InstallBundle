@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class InstallCommand
- * @package Ekyna\Bundle\CoreBundle\Command
+ * @package Ekyna\Bundle\InstallBundle\Command
  * @author  Étienne Dauvergne <contact@ekyna.com>
  */
 class InstallCommand extends Command
