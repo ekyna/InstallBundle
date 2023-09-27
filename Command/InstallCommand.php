@@ -58,7 +58,7 @@ EOT
     {
         $names = $input->getArgument('names');
 
-        $this->installers = $this->registry->getInstallers();
+        $this->installers = $this->registry->getInstallers($names);
 
         if (empty($this->installers)) {
             $message = 'Could not find any installers';
